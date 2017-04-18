@@ -1,4 +1,4 @@
-use_inline_resources if defined?(use_inline_resources)
+use_inline_resources
 
 def whyrun_supported?
   true
@@ -12,23 +12,21 @@ def install_haproxy_config
   template "#{new_resource.conf_dir}/haproxy.cfg" do
     cookbook new_resource.conf_cookbook
     source new_resource.conf_template_source
-    owner "root"
-    group "root"
-    mode 00644
+    owner 'root'
+    group 'root'
+    mode '0644'
     variables(
-      :defaults_options => defaults_options,
-      :defaults_timeouts => defaults_timeouts,
-      :conf_template_variables => new_resource.conf_template_variables
+      defaults_options: defaults_options,
+      defaults_timeouts: defaults_timeouts,
+      conf_template_variables: new_resource.conf_template_variables
     )
   end
 end
 
 def defaults_options
   options = node['haproxy']['defaults_options'].dup
-  if node['haproxy']['x_forwarded_for']
-    options.push("forwardfor")
-  end
-  return options.uniq
+  options.push('forwardfor') if node['haproxy']['x_forwarded_for']
+  options.uniq
 end
 
 def defaults_timeouts

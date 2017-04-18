@@ -1,14 +1,13 @@
 global
-  log 127.0.0.1   local0
-  log 127.0.0.1   local1 notice
-  #log loghost    local0 info
+<% node['haproxy']['syslog'].each do |k,config| %>
+  log <%= config[:address] %> <% unless config[:len].nil? %>len <%= config[:len] %><% end %><% unless config[:format].nil? %>format <%= config[:format] %><%end%><%= config[:facility] %> <%= config[:max_level] %> <%= config[:min_level] %>
+<% end %>
   maxconn <%= node['haproxy']['global_max_connections'] %>
-  #debug
-  #quiet
+  <%= node['haproxy']['debug_options'] %>
   user <%= node['haproxy']['user'] %>
   group <%= node['haproxy']['group'] %>
 <% if node['haproxy']['enable_stats_socket'] -%>
-  stats socket <%= node['haproxy']['stats_socket_path'] %> user <%= node['haproxy']['stats_socket_user'] %> group <%= node['haproxy']['stats_socket_group'] %>
+  stats socket <%= node['haproxy']['stats_socket_path'] -%> <%= node['haproxy']['stats_socket'].map{|k, v| "#{k} #{v}"}.flatten.join(' ') %>
 <% end -%>
 <% node['haproxy']['global_options'].sort.each do |option, value| %>
   <%= option %> <%= value %>

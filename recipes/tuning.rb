@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: haproxy
+# Cookbook:: haproxy
 # Author:: Guilhem Lettron <guilhem.lettron@youscribe.com>
 #
-# Copyright 2012, Societe Publica.
+# Copyright:: 2012, Societe Publica.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-include_recipe "cpu::affinity"
+include_recipe 'cpu::affinity'
 
-cpu_affinity "set affinity for haproxy" do
+cpu_affinity 'set affinity for haproxy' do
   pid node['haproxy']['pid_file']
   cpu 0
-  subscribes :set, 'service[haproxy]'
+  subscribes :set, 'poise_service[haproxy]'
 end

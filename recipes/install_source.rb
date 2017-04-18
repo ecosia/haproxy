@@ -1,8 +1,8 @@
 #
-# Cookbook Name:: haproxy
+# Cookbook:: haproxy
 # Recipe:: default
 #
-# Copyright 2009, Opscode, Inc.
+# Copyright:: 2009-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 include_recipe 'build-essential'
 
-case node["platform_family"]
+case node['platform_family']
 when 'debian'
   pcre_pkg = 'libpcre3-dev'
   ssl_pkg = 'libssl-dev'
@@ -30,7 +30,7 @@ when 'rhel'
   zlib_pkg = 'zlib-devel'
 end
 
-package pcre_pkg do
+package pcre_pkg do # ~FC005
   only_if { node['haproxy']['source']['use_pcre'] }
 end
 
@@ -42,62 +42,34 @@ package zlib_pkg do
   only_if { node['haproxy']['source']['use_zlib'] }
 end
 
-node.default['haproxy']['conf_dir'] = ::File.join(node['haproxy']['source']['prefix'], node['haproxy']['conf_dir'])
+node.default['haproxy']['conf_dir'] = ::File.join(node['haproxy']['source']['prefix'], 'etc', 'haproxy')
 
 download_file_path = ::File.join(Chef::Config[:file_cache_path], "haproxy-#{node['haproxy']['source']['version']}.tar.gz")
-remote_file download_file_path do
+remote_file 'haproxy source file' do
+  path download_file_path
   source node['haproxy']['source']['url']
   checksum node['haproxy']['source']['checksum']
-  action :create_if_missing
-end
-
-ruby_block "Validating checksum for the downloaded tarball" do
-  block do
-    checksum = Digest::SHA2.file(download_file_path).hexdigest
-    if checksum != node['haproxy']['source']['checksum']
-      raise "Checksum of the downloaded file #{checksum} does not match known checksum #{node['haproxy']['source']['checksum']}"
-    end
-  end
+  action :create
 end
 
 make_cmd = "make TARGET=#{node['haproxy']['source']['target_os']}"
-make_cmd << " CPU=#{node['haproxy']['source']['target_cpu' ]}" unless node['haproxy']['source']['target_cpu'].empty?
+make_cmd << " CPU=#{node['haproxy']['source']['target_cpu']}" unless node['haproxy']['source']['target_cpu'].empty?
 make_cmd << " ARCH=#{node['haproxy']['source']['target_arch']}" unless node['haproxy']['source']['target_arch'].empty?
-make_cmd << " USE_PCRE=1" if node['haproxy']['source']['use_pcre']
-make_cmd << " USE_OPENSSL=1" if node['haproxy']['source']['use_openssl']
-make_cmd << " USE_ZLIB=1" if node['haproxy']['source']['use_zlib']
+make_cmd << ' USE_PCRE=1' if node['haproxy']['source']['use_pcre']
+make_cmd << ' USE_OPENSSL=1' if node['haproxy']['source']['use_openssl']
+make_cmd << ' USE_ZLIB=1' if node['haproxy']['source']['use_zlib']
+make_cmd << ' USE_LINUX_TPROXY=1' if node['haproxy']['source']['use_tproxy']
+make_cmd << ' USE_LINUX_SPLICE=1' if node['haproxy']['source']['use_splice']
+extra_cmd = 'EXTRA=haproxy-systemd-wrapper' if node['init_package'] == 'systemd'
 
-bash "compile_haproxy" do
+bash 'compile_haproxy' do
   cwd Chef::Config[:file_cache_path]
   code <<-EOH
     tar xzf haproxy-#{node['haproxy']['source']['version']}.tar.gz
     cd haproxy-#{node['haproxy']['source']['version']}
-    #{make_cmd} && make install PREFIX=#{node['haproxy']['source']['prefix']}
+    #{make_cmd} && make install PREFIX=#{node['haproxy']['source']['prefix']} #{extra_cmd}
   EOH
-  creates "#{node['haproxy']['source']['prefix']}/sbin/haproxy"
-end
-
-user "haproxy" do
-  comment "haproxy system account"
-  system true
-  shell "/bin/false"
+  not_if "#{node['haproxy']['source']['prefix']}/sbin/haproxy -v | grep #{node['haproxy']['source']['version']}"
 end
 
 directory node['haproxy']['conf_dir']
-
-template "/etc/init.d/haproxy" do
-  source "haproxy-init.erb"
-  owner "root"
-  group "root"
-  mode 00755
-  variables(
-    :hostname => node['hostname'],
-    :conf_dir => node['haproxy']['conf_dir'],
-    :prefix => node['haproxy']['source']['prefix']
-  )
-end
-
-service "haproxy" do
-  supports :restart => true, :status => true, :reload => true
-  action [:enable, :start]
-end

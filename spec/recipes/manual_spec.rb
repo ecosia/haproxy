@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 describe 'haproxy::manual' do
-  let(:chef_run) { ChefSpec::Runner.new().converge(described_recipe) }
+  cached(:chef_run) { ChefSpec::ServerRunner.new(platform: 'ubuntu', version: '16.04').converge(described_recipe) }
 
   it 'includes the haproxy defaults file' do
     expect(chef_run).to create_cookbook_file('/etc/default/haproxy').with(
       source: 'haproxy-default',
       owner: 'root',
       group: 'root',
-      mode: 00644,
+      mode: '0644'
     )
   end
 
@@ -26,13 +26,5 @@ describe 'haproxy::manual' do
 
   it 'writes out the haproxy config' do
     expect(chef_run).to create_haproxy_config('Create haproxy.cfg')
-  end
-
-  it 'enables the haproxy service' do
-    expect(chef_run).to enable_service('haproxy')
-  end
-
-  it 'starts the haproxy service' do
-    expect(chef_run).to start_service('haproxy')
   end
 end
