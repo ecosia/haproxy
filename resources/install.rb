@@ -81,7 +81,7 @@ action :create do
     make_cmd << " USE_LINUX_TPROXY=#{new_resource.use_linux_tproxy}"
     make_cmd << " USE_LINUX_SPLICE=#{new_resource.use_linux_splice}"
 
-    systemd_cmd = ' USE_SYSTEMD' if node['init_package'] == 'systemd' && !new_resource.install_only
+    systemd_cmd = ' USE_SYSTEMD=1' if node['init_package'] == 'systemd' && !new_resource.install_only
 
     bash 'compile_haproxy' do
       cwd Chef::Config[:file_cache_path]
