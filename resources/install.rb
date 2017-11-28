@@ -81,14 +81,14 @@ action :create do
     make_cmd << " USE_LINUX_TPROXY=#{new_resource.use_linux_tproxy}"
     make_cmd << " USE_LINUX_SPLICE=#{new_resource.use_linux_splice}"
 
-    extra_cmd = ' EXTRA=haproxy-systemd-wrapper' if node['init_package'] == 'systemd' && !new_resource.install_only
+    systemd_cmd = ' USE_SYSTEMD' if node['init_package'] == 'systemd' && !new_resource.install_only
 
     bash 'compile_haproxy' do
       cwd Chef::Config[:file_cache_path]
       code <<-EOH
         tar xzf haproxy-#{new_resource.source_version}.tar.gz
         cd haproxy-#{new_resource.source_version}
-        #{make_cmd} && make install PREFIX=#{new_resource.bin_prefix} #{extra_cmd}
+        #{make_cmd} && make install PREFIX=#{new_resource.bin_prefix} #{systemd_cmd}
       EOH
       not_if "#{::File.join(new_resource.bin_prefix, 'sbin', 'haproxy')} -v | grep #{new_resource.source_version}"
     end
