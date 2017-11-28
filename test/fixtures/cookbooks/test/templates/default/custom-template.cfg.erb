@@ -1,0 +1,51 @@
+# testsuite needs user/group/pidfile/chroot/daemon to be set!
+<% unless @global.nil? %>
+global
+  user <%= @global['user'] %>
+  group <%= @global['group'] %>
+<% if @global['pid_file'] -%>
+  pidfile <%= @global['pid_file'] %>
+<% end %>
+<% if @global['log'] && @global['log'].is_a?(Array)-%>
+<% @global['log'].each do | logvar | -%>
+<% if logvar && logvar.is_a?(Array)-%>
+<% logvar.each  do | log | -%>
+  log <%= log %>
+<% end -%>
+<% else -%>
+  log <%= logvar %>
+<% end -%>
+<% end -%>
+<% end -%>
+<% if @global['log_tag'] -%>
+  log-tag <%= @global['log_tag'] %>
+<% end -%>
+<% if @global['chroot'] -%>
+  chroot <%= @global['chroot'] %>
+<% end -%>
+<% if @global['daemon'].eql? 'true' -%>
+  daemon
+<% end -%>
+  <%= @global['debug_option'] %>
+<% @global['stats'].each do |option, value| -%>
+  stats <%= option %> <%= value %>
+<% end -%>
+<% unless @global['maxconn'].nil? -%>
+  maxconn <%= @global['maxconn'] %>
+<% end -%>
+<% if @global['pidfile'] -%>
+  pidfile <%= @global['pidfile'] %>
+<% end -%>
+<% unless @global['tuning'].nil? %>
+<% @global['tuning'].each do | option, value | -%>
+  tune.<%= option %> <%= value %>
+<% end -%>
+<% end -%>
+<% unless @global['extra_options'].nil? -%>
+<% @global['extra_options'].each do | option, value | -%>
+  <%= option %> <%= value %>
+<% end -%>
+<% end -%>
+<% end -%>
+
+# Omission of frontends/listen/backend is deliberate

@@ -1,7 +1,7 @@
 driver:
   name: dokken
   privileged: true # because Docker and SystemD/Upstart
-  chef_version: current
+  chef_version: <%= ENV['CHEF_VERSION'] || 'current' %>
 
 transport:
   name: dokken
@@ -9,11 +9,15 @@ transport:
 provisioner:
   name: dokken
 
-verifier:
-  root_path: '/opt/verifier'
-  sudo: false
-
 platforms:
+- name: debian-8
+  driver:
+    image: debian:8
+    pid_one_command: /bin/systemd
+    intermediate_instructions:
+      - RUN /usr/bin/apt-get update
+      - RUN /usr/bin/apt-get install apt-transport-https lsb-release procps net-tools -y
+
 - name: centos-6
   driver:
     image: centos:6
@@ -30,20 +34,12 @@ platforms:
     intermediate_instructions:
       - RUN yum -y install lsof which systemd-sysv initscripts wget net-tools
 
-- name: debian-8
+- name: fedora-25
   driver:
-    image: debian:8
-    pid_one_command: /bin/systemd
-    intermediate_instructions:
-      - RUN /usr/bin/apt-get update
-      - RUN /usr/bin/apt-get install apt-transport-https lsb-release procps net-tools -y
-
-- name: fedora-latest
-  driver:
-    image: fedora:latest
+    image: fedora:25
     pid_one_command: /usr/lib/systemd/systemd
     intermediate_instructions:
-      - RUN dnf -y install which systemd-sysv initscripts wget net-tools
+      - RUN dnf -y install yum which systemd-sysv initscripts wget net-tools
 
 - name: ubuntu-14.04
   driver:
@@ -68,16 +64,83 @@ platforms:
     intermediate_instructions:
       - RUN zypper --non-interactive install aaa_base perl-Getopt-Long-Descriptive which hostname
 
+- name: amazon
+  driver:
+    image: amazonlinux:latest
+    pid_one_command: /sbin/init
+    intermediate_instructions:
+      - RUN yum update -y
+      - RUN yum -y install which initscripts net-tools wget procps util-linux
+
+- name: oel-6
+  driver:
+    image: oraclelinux:6
+    platform: rhel
+    pid_one_command: /sbin/init
+    intermediate_instructions:
+      - RUN yum -y install which initscripts net-tools wget
+
+- name: oel-7
+  driver:
+    image: oraclelinux:7
+    platform: rhel
+    pid_one_command: /usr/lib/systemd/systemd
+    intermediate_instructions:
+      - RUN yum -y install lsof which systemd-sysv initscripts wget net-tools
+
 suites:
 - name: package
   run_list:
-  - recipe[test]
+    - recipe[test::package]
 - name: source
   run_list:
-  - recipe[test]
+    - recipe[test::source]
   attributes:
     haproxy:
-      install_method: source
-- name: app_lb
+      source_version: <%= ENV['HAPROXY_SOURCE_VERSION'].nil? ? '1.7.8' : ENV['HAPROXY_SOURCE_VERSION'] %>
+      source_url: <%= ENV['HAPROXY_SOURCE_URL'].nil? ? 'http://www.haproxy.org/download/1.7/src/haproxy-1.7.8.tar.gz' : ENV['HAPROXY_SOURCE_URL'] %>
+      source_checksum: <%= ENV['HAPROXY_SOURCE_CHECKSUM'].nil? ? 'ec90153ccedd20ad4015d3eaf76b502ff1f61b431d54c22b8457b5784a9ae142' : ENV['HAPROXY_SOURCE_CHECKSUM'] %>
+- name: config_1
   run_list:
-  - recipe[haproxy::app_lb]
+    - recipe[test::config_1]
+  includes: centos-7
+- name: config_2
+  run_list:
+    - recipe[test::config_2]
+  includes: centos-7
+- name: config_3_logs
+  run_list:
+    - recipe[test::config_3_logs]
+  includes: centos-7
+- name: config_4
+  run_list:
+    - recipe[test::config_4]
+  includes: centos-7
+- name: config_backend_search
+  run_list:
+    - recipe[test::config_backend_search]
+  includes: centos-7
+- name: config_1_userlist
+  run_list:
+    - recipe[test::config_1_userlist]
+  includes: centos-7
+- name: config_acl
+  run_list:
+    - recipe[test::config_acl]
+  includes: centos-7
+- name: config_resolver
+  run_list:
+    - recipe[test::config_resolver]
+  includes: centos-7
+- name: config_ssl_redirect
+  run_list:
+    - recipe[test::config_ssl_redirect]
+  includes: centos-7
+- name: config_custom_template
+  run_list:
+    - recipe[test::config_custom_template]
+  includes: centos-7
+- name: config_array
+  run_list:
+    - recipe[test::config_array]
+  includes: centos-7

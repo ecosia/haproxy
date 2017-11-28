@@ -1,45 +1,85 @@
 driver:
   name: vagrant
 
+
 provisioner:
   name: chef_zero
-  deprecations_as_errors: true
+  require_chef_omnibus: <%= ENV['CHEF_VERSION'] || 'latest' %>
+
+client_rb:
+  treat_deprecation_warnings_as_errors: true
+  resource_cloning: false
+
+verifier:
+  name: inspec
 
 platforms:
-  - name: centos-6
-    driver:
-      box: bento/centos-6.8
-
-  - name: centos-7
-    driver:
-      box: bento/centos-7.3
-
-  - name: debian-8
-    driver:
-      box: bento/debian-8.6
-
+  - name: centos-6.8
+  - name: centos-7.3
+  - name: debian-7.11
+  - name: debian-8.6
   - name: fedora-25
-    driver:
-      box: bento/fedora-25
-
+  - name: opensuse-13.2
+  - name: opensuse-leap-42.1
+  - name: oracle-6.8
+  - name: oracle-7.3
   - name: ubuntu-14.04
-    driver:
-      box: bento/ubuntu-14.04
-
   - name: ubuntu-16.04
-    driver:
-      box: bento/ubuntu-16.04
 
 suites:
-- name: package
-  run_list:
-    - recipe[test]
-- name: source
-  run_list:
-    - recipe[test]
-  attributes:
-    haproxy:
-      install_method: source
-- name: app_lb
-  run_list:
-    - recipe[haproxy::app_lb]
+  - name: package
+    run_list:
+      - recipe[test::package]
+    excludes: debian-7.11
+  - name: source
+    run_list:
+      - recipe[test::source]
+    attributes:
+      haproxy:
+        source_version: <%= ENV['HAPROXY_SOURCE_VERSION'].nil? ? '1.7.8' : ENV['HAPROXY_SOURCE_VERSION'] %>
+        source_url: <%= ENV['HAPROXY_SOURCE_URL'].nil? ? 'http://www.haproxy.org/download/1.7/src/haproxy-1.7.8.tar.gz' : ENV['HAPROXY_SOURCE_URL'] %>
+        source_checksum: <%= ENV['HAPROXY_SOURCE_CHECKSUM'].nil? ? 'ec90153ccedd20ad4015d3eaf76b502ff1f61b431d54c22b8457b5784a9ae142' : ENV['HAPROXY_SOURCE_CHECKSUM'] %>
+  - name: config_1
+    run_list:
+      - recipe[test::config_1]
+    includes: centos-7.3
+  - name: config_2
+    run_list:
+      - recipe[test::config_2]
+    includes: centos-7.3
+  - name: config_3_logs
+    run_list:
+      - recipe[test::config_3_logs]
+    includes: centos-7.3
+  - name: config_4
+    run_list:
+      - recipe[test::config_4]
+    includes: centos-7.3
+  - name: config_backend_search
+    run_list:
+      - recipe[test::config_backend_search]
+    includes: centos-7.3
+  - name: config_1_userlist
+    run_list:
+      - recipe[test::config_1_userlist]
+    includes: centos-7.3
+  - name: config_acl
+    run_list:
+      - recipe[test::config_acl]
+    includes: centos-7.3
+  - name: config_resolver
+    run_list:
+      - recipe[test::config_resolver]
+    includes: centos-7.3
+  - name: config_ssl_redirect
+    run_list:
+      - recipe[test::config_ssl_redirect]
+    includes: centos-7.3
+  - name: config_custom_template
+    run_list:
+      - recipe[test::config_custom_template]
+    includes: centos-7.3
+  - name: config_array
+    run_list:
+      - recipe[test::config_array]
+    includes: centos-7.3
