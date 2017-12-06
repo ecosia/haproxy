@@ -25,6 +25,9 @@ global
 <% if @global['daemon'].eql? 'true' -%>
   daemon
 <% end -%>
+<% if @global['master_worker'].eql? 'true' && !@global['daemon'].eql? 'true' -%>
+  master-worker
+<% end -%>
   <%= @global['debug_option'] %>
 <% @global['stats'].each do |option, value| -%>
   stats <%= option %> <%= value %>

@@ -126,11 +126,11 @@ action :create do
     end
 
     if node['init_package'] == 'systemd'
-      haproxy_systemd_wrapper = ::File.join(new_resource.bin_prefix, 'sbin', 'haproxy-systemd-wrapper')
+      haproxy_systemd_binary = ::File.join(new_resource.bin_prefix, 'sbin', 'haproxy')
 
       poise_service 'haproxy' do
         provider :systemd
-        command "#{haproxy_systemd_wrapper} -f #{new_resource.config_file} -p /run/haproxy.pid $OPTIONS"
+        command "#{haproxy_systemd_binary} -f #{new_resource.config_file} -p /run/haproxy.pid $OPTIONS"
         options reload_signal: 'USR2',
                 restart_mode: 'always',
                 after_target: 'network',

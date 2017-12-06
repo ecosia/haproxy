@@ -3,6 +3,7 @@ property :haproxy_group, String, default: 'haproxy'
 property :pidfile, String, default: '/var/run/haproxy.pid'
 property :log, [String, Array], default: '/dev/log syslog info'
 property :daemon, [TrueClass, FalseClass], default: true
+property :master_worker, [TrueClass, FalseClass], default: false
 property :debug_option, String, default: 'quiet', equal_to: %w(quiet debug)
 property :stats, Hash, default: lazy {
   {
@@ -44,6 +45,8 @@ action :create do
       variables['global']['chroot'] << new_resource.chroot unless new_resource.chroot.nil?
       variables['global']['daemon'] ||= ''
       variables['global']['daemon'] << new_resource.daemon.to_s
+      variables['global']['master_worker'] ||= ''
+      variables['global']['master_worker'] << new_resource.master_worker.to_s
       variables['global']['debug_option'] ||= ''
       variables['global']['debug_option'] << new_resource.debug_option
       variables['global']['maxconn'] ||= '' unless new_resource.maxconn.nil?
