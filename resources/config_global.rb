@@ -12,7 +12,8 @@ property :stats, Hash, default: lazy {
   }
 }
 property :maxconn, Integer, default: 4096
-property :config_cookbook, String, default: 'haproxy'
+property :conf_template_source, String, default: 'haproxy.cfg.erb'
+property :conf_cookbook, String, default: 'haproxy'
 property :chroot, String
 property :log_tag, String, default: 'haproxy'
 property :tuning, Hash
